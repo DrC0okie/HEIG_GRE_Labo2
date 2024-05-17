@@ -12,9 +12,11 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
     public BFYResult compute(WeightedDigraph graph, int from) {
         int sentinel = -1;
         int[] predecessors = new int[graph.getNVertices()];
+        Arrays.fill(predecessors, sentinel);
 
         // Initialize the shortest path lengths to infinity
-        int[] shortestPathLengths = new int[Integer.MAX_VALUE];
+        int[] shortestPathLengths = new int[graph.getNVertices()];
+        Arrays.fill(shortestPathLengths, Integer.MAX_VALUE);
 
         // Use an array to check if a vertex is in the queue
         boolean[] isInQueue = new boolean[graph.getNVertices()];
@@ -66,5 +68,54 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         }
 
         return new BFYResult.ShortestPathTree(shortestPathLengths, predecessors);
+    }
+
+    private BFYResult detectNegativeCycle(WeightedDigraph graph, int[] shortestPathLengths, int[] predecessors) {
+        int n = graph.getNVertices();
+
+        for (int u = 0; u < n; u++) {
+            for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(u)) {
+                if (shortestPathLengths[u] != Integer.MAX_VALUE &&
+                        shortestPathLengths[edge.to()] > shortestPathLengths[u] + edge.weight()) {
+
+                    // Cycle detected
+                    List<Integer> cycle = new ArrayList<>();
+                    boolean[] visited = new boolean[n];
+                    int x = u;
+
+                    // Find the start of the cycle
+                    for (int i = 0; i < n; i++) {
+                        x = predecessors[x];
+                    }
+
+                    // Trace the cycle
+                    int start = x;
+                    do {
+                        cycle.add(start);
+                        start = predecessors[start];
+                    } while (start != x);
+
+                    cycle.add(x);
+                    Collections.reverse(cycle);
+
+                    // Calculate cycle weight
+                    int cycleWeight = 0;
+                    for (int i = 0; i < cycle.size() - 1; i++) {
+                        int from = cycle.get(i);
+                        int to = cycle.get(i + 1);
+                        for (WeightedDigraph.Edge e : graph.getOutgoingEdges(from)) {
+                            if (e.to() == to) {
+                                cycleWeight += e.weight();
+                                break;
+                            }
+                        }
+                    }
+
+                    return new BFYResult.NegativeCycle(cycle, cycleWeight);
+                }
+            }
+        }
+
+        return new BFYResult.NegativeCycle(new ArrayList<>(), 0);
     }
 }
