@@ -35,7 +35,10 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
             // Retrieve the first vertex from the queue
             int currentVertex = vertices.removeFirst();
-            isInQueue[currentVertex] = false;
+            //Only update isInQueue when it's not the sentinel
+            if(currentVertex != sentinel){
+                isInQueue[currentVertex] = false;
+            }
 
             // End of iteration
             if (currentVertex == sentinel) {
