@@ -73,52 +73,15 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         return new BFYResult.ShortestPathTree(shortestPathLengths, predecessors);
     }
 
-    private BFYResult detectNegativeCycle(WeightedDigraph graph, int[] shortestPathLengths, int[] predecessors) {
-        int n = graph.getNVertices();
+    private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors) {
+        List<Integer> cycle = new LinkedList<>();
+        int currentCycleVertex = vertices.removeFirst();
 
-        for (int u = 0; u < n; u++) {
-            for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(u)) {
-                if (shortestPathLengths[u] != Integer.MAX_VALUE &&
-                        shortestPathLengths[edge.to()] > shortestPathLengths[u] + edge.weight()) {
-
-                    // Cycle detected
-                    List<Integer> cycle = new ArrayList<>();
-                    boolean[] visited = new boolean[n];
-                    int x = u;
-
-                    // Find the start of the cycle
-                    for (int i = 0; i < n; i++) {
-                        x = predecessors[x];
-                    }
-
-                    // Trace the cycle
-                    int start = x;
-                    do {
-                        cycle.add(start);
-                        start = predecessors[start];
-                    } while (start != x);
-
-                    cycle.add(x);
-                    Collections.reverse(cycle);
-
-                    // Calculate cycle weight
-                    int cycleWeight = 0;
-                    for (int i = 0; i < cycle.size() - 1; i++) {
-                        int from = cycle.get(i);
-                        int to = cycle.get(i + 1);
-                        for (WeightedDigraph.Edge e : graph.getOutgoingEdges(from)) {
-                            if (e.to() == to) {
-                                cycleWeight += e.weight();
-                                break;
-                            }
-                        }
-                    }
-
-                    return new BFYResult.NegativeCycle(cycle, cycleWeight);
-                }
-            }
+        while(predecessors[currentCycleVertex] != currentCycleVertex){
+            cycle.add(currentCycleVertex);
+            currentCycleVertex = predecessors[currentCycleVertex];
         }
 
-        return new BFYResult.NegativeCycle(new ArrayList<>(), 0);
+        return new BFYResult.NegativeCycle(cycle, cycle.size());
     }
 }
