@@ -1,4 +1,4 @@
-package gre.lab2.groupX;
+package gre.lab2.groupC;
 
 import java.io.IOException;
 
