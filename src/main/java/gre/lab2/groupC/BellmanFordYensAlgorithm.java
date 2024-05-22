@@ -3,7 +3,6 @@ package gre.lab2.groupC;
 import gre.lab2.graph.BFYResult;
 import gre.lab2.graph.IBellmanFordYensAlgorithm;
 import gre.lab2.graph.WeightedDigraph;
-
 import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
@@ -35,6 +34,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
             // Retrieve the first vertex from the queue
             int currentVertex = vertices.removeFirst();
+
             //Only update isInQueue when it's not the sentinel
             if(currentVertex != sentinel){
                 isInQueue[currentVertex] = false;
@@ -47,15 +47,14 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
                     // Negative cycle detected
                     if (iterationCount == graph.getNVertices()) {
-                        // TODO => detect negative cycle
-                        return new BFYResult.NegativeCycle(new ArrayList<Integer>(2), 0);
+                        return getNegativeCycle(vertices, predecessors, graph);
                     }
                     vertices.add(sentinel);
                 }
             } else {
-                // Process every sucessor of the current vertex
+                // Process every successor of the current vertex
                 for (WeightedDigraph.Edge succ : graph.getOutgoingEdges(currentVertex)) {
-                    // Improvement of the shortest path length
+                    // Improvement of the shortest path length => update predecessor
                     if (shortestPathLengths[succ.to()] > shortestPathLengths[currentVertex] + succ.weight()) {
                         shortestPathLengths[succ.to()] = shortestPathLengths[currentVertex] + succ.weight();
                         predecessors[succ.to()] = currentVertex;
@@ -73,15 +72,39 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         return new BFYResult.ShortestPathTree(shortestPathLengths, predecessors);
     }
 
-    private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors) {
-        List<Integer> cycle = new LinkedList<>();
-        int currentCycleVertex = vertices.removeFirst();
+    private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors, WeightedDigraph graph) {
+        List<Integer> negativeCycle = new LinkedList<>();
 
-        while(predecessors[currentCycleVertex] != currentCycleVertex){
-            cycle.add(currentCycleVertex);
-            currentCycleVertex = predecessors[currentCycleVertex];
+        // Get the last vertex of the Deque. It must be inside the negative cycle
+        int currentCycleVertex = vertices.getLast();
+        int cycleWeight = 0;
+
+        // Add the last vertex in the list
+        negativeCycle.add(currentCycleVertex);
+
+        // Parse all predecessors of the current vertex until we find it again (cycle)
+        while (true) {
+            int predecessor = predecessors[currentCycleVertex];
+
+            // Accumulate the weight of the edge between predecessor and currentCycleVertex
+            for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(predecessor)) {
+                if (edge.to() == currentCycleVertex) {
+                    cycleWeight += edge.weight();
+                    break;
+                }
+            }
+
+            // Move to the predecessor
+            currentCycleVertex = predecessor;
+
+            // Add the predecessor to the list
+            negativeCycle.add(currentCycleVertex);
+
+            // Check if we have completed the cycle
+            if (currentCycleVertex == vertices.getLast()) {
+                break;
+            }
         }
-
-        return new BFYResult.NegativeCycle(cycle, cycle.size());
+        return new BFYResult.NegativeCycle(negativeCycle, cycleWeight);
     }
 }
