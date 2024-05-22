@@ -3,32 +3,30 @@ package gre.lab2.groupC;
 import gre.lab2.graph.BFYResult;
 import gre.lab2.graph.IBellmanFordYensAlgorithm;
 import gre.lab2.graph.WeightedDigraph;
+import static gre.lab2.graph.BFYResult.UNREACHABLE;
 import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
 
     @Override
-    public BFYResult compute(WeightedDigraph graph, int from) {
-        int sentinel = -1;
-        int[] predecessors = new int[graph.getNVertices()];
-        Arrays.fill(predecessors, sentinel);
+    public BFYResult compute(WeightedDigraph graph, int source) {
+        int numVertices = graph.getNVertices();
+        int[] predecessors = new int[numVertices], distances = new int[numVertices];
 
-        // Initialize the shortest path lengths to infinity
-        int[] shortestPathLengths = new int[graph.getNVertices()];
-        Arrays.fill(shortestPathLengths, Integer.MAX_VALUE);
+        // Initialize distances to infinity and predecessors to -1
+        Arrays.fill(predecessors, UNREACHABLE);
+        Arrays.fill(distances, Integer.MAX_VALUE);
 
-        // Use an array to check if a vertex is in the queue
-        boolean[] isInQueue = new boolean[graph.getNVertices()];
+        // Track whether a vertex is currently in the queue
+        boolean[] isInQueue = new boolean[numVertices];
 
-        // Initialize source length and iteration counter to 0
-        shortestPathLengths[from] = 0;
+        distances[source] = 0;
         int iterationCount = 0;
 
+        // Initialize and add the source vertex and the sentinel to the queue
         Deque<Integer> vertices = new ArrayDeque<>();
-
-        // Add the source vertex and the sentinel to the queue
-        vertices.add(from);
-        vertices.add(sentinel);
+        vertices.add(source);
+        vertices.add(UNREACHABLE);
 
         while (!vertices.isEmpty()) {
 
@@ -36,72 +34,71 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             int currentVertex = vertices.removeFirst();
 
             //Only update isInQueue when it's not the sentinel
-            if(currentVertex != sentinel){
+            if(currentVertex != UNREACHABLE){
                 isInQueue[currentVertex] = false;
             }
 
-            // End of iteration
-            if (currentVertex == sentinel) {
+            // End of iteration marker
+            if (currentVertex == UNREACHABLE) {
                 if (!vertices.isEmpty()) {
                     iterationCount++;
 
-                    // Negative cycle detected
-                    if (iterationCount == graph.getNVertices()) {
+                    // Negative cycle detected after n-1 iterations
+                    if (iterationCount == numVertices - 1) {
                         return getNegativeCycle(vertices, predecessors, graph);
                     }
-                    vertices.add(sentinel);
+                    vertices.add(UNREACHABLE);
                 }
             } else {
-                // Process every successor of the current vertex
-                for (WeightedDigraph.Edge succ : graph.getOutgoingEdges(currentVertex)) {
-                    // Improvement of the shortest path length => update predecessor
-                    if (shortestPathLengths[succ.to()] > shortestPathLengths[currentVertex] + succ.weight()) {
-                        shortestPathLengths[succ.to()] = shortestPathLengths[currentVertex] + succ.weight();
-                        predecessors[succ.to()] = currentVertex;
-                        if (!isInQueue[succ.to()]) {
+                // Process every outgoing edge of the current vertex
+                for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(currentVertex)) {
+                    int successor = edge.to();
+                    int newDistance = distances[currentVertex] + edge.weight();
 
+                    // If the new path is shorter, update the distance and predecessor
+                    if (distances[successor] > newDistance) {
+                        distances[successor] = newDistance;
+                        predecessors[successor] = currentVertex;
+
+                        if (!isInQueue[successor]) {
                             // Add the successor to the queue
-                            vertices.add(succ.to());
-                            isInQueue[succ.to()] = true;
+                            vertices.add(successor);
+                            isInQueue[successor] = true;
                         }
                     }
                 }
             }
         }
 
-        return new BFYResult.ShortestPathTree(shortestPathLengths, predecessors);
+        return new BFYResult.ShortestPathTree(distances, predecessors);
     }
 
-    private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors, WeightedDigraph graph) {
-        List<Integer> negativeCycle = new LinkedList<>();
-
-        // Get the last vertex of the Deque. It must be inside the negative cycle
-        int currentCycleVertex = vertices.getLast();
+    static private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors,
+                                        WeightedDigraph graph) {
         int cycleWeight = 0;
 
-        // Add the last vertex in the list
-        negativeCycle.add(currentCycleVertex);
+        // Get the last vertex of the Deque. It is guaranteed to be part of the negative cycle
+        int currentVertex = vertices.getLast();
+        List<Integer> negativeCycle = new LinkedList<>(List.of(currentVertex));
 
-        // Parse all predecessors of the current vertex until we find it again (cycle)
+        // Traverse the predecessors to construct the cycle and accumulate the weights
         while (true) {
-            int predecessor = predecessors[currentCycleVertex];
+            int predecessor = predecessors[currentVertex];
 
-            // Accumulate the weight of the edge between predecessor and currentCycleVertex
+            // Accumulate the weight of the edge between the predecessor and the current vertex
             for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(predecessor)) {
-                if (edge.to() == currentCycleVertex) {
+                if (edge.to() == currentVertex) {
                     cycleWeight += edge.weight();
                     break;
                 }
             }
 
-            // Move to the predecessor
-            currentCycleVertex = predecessor;
+            // Move to the predecessor and add it to the list
+            currentVertex = predecessor;
+            negativeCycle.add(currentVertex);
 
-            // Add the predecessor to the list
-            negativeCycle.add(currentCycleVertex);
-
-            // Check if we have completed the cycle
-            if (currentCycleVertex == vertices.getLast()) {
+            // Check if the cycle is complete
+            if (currentVertex == vertices.getLast()) {
                 break;
             }
         }
