@@ -3,7 +3,9 @@ package gre.lab2.groupC;
 import gre.lab2.graph.BFYResult;
 import gre.lab2.graph.IBellmanFordYensAlgorithm;
 import gre.lab2.graph.WeightedDigraph;
+
 import static gre.lab2.graph.BFYResult.UNREACHABLE;
+
 import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
@@ -31,10 +33,10 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         while (!vertices.isEmpty()) {
 
             // Retrieve the first vertex from the queue
-            int currentVertex = vertices.removeFirst();
+            int currentVertex = vertices.poll();
 
             //Only update isInQueue when it's not the sentinel
-            if(currentVertex != UNREACHABLE){
+            if (currentVertex != UNREACHABLE) {
                 isInQueue[currentVertex] = false;
             }
 
@@ -42,11 +44,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             if (currentVertex == UNREACHABLE) {
                 if (!vertices.isEmpty()) {
                     iterationCount++;
-
-                    // Negative cycle detected after n-1 iterations
-                    if (iterationCount == numVertices - 1) {
-                        return getNegativeCycle(vertices, predecessors, graph);
-                    }
+                    if (iterationCount == numVertices - 1) break;
                     vertices.add(UNREACHABLE);
                 }
             } else {
@@ -70,14 +68,42 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             }
         }
 
+//        // Check for negative-weight cycles
+//        for (WeightedDigraph.Edge edge : graph.getOutgoingEdges()) {
+//            int u = edge.from();
+//            int v = edge.to();
+//            int weight = edge.weight();
+//            if (distances[u] + weight < distances[v]) {
+//                // Negative cycle detected, find cycle
+//                List<Integer> cycle = new ArrayList<>();
+//                boolean[] visited = new boolean[numVertices];
+//                do {
+//                    visited[u] = true;
+//                    u = predecessors[u];
+//                } while (!visited[u]);
+//
+//                // Backtrack to get the full cycle
+//                int start = u;
+//                do {
+//                    cycle.add(u);
+//                    u = predecessors[u];
+//                } while (u != start);
+//                cycle.add(u); // Add start vertex to complete the cycle
+//
+//                Collections.reverse(cycle); // Optional: To list the cycle in the correct order
+//                return new BFYResult.NegativeCycle(cycle, calculateCycleWeight(cycle, graph));
+//            }
+//        }
+
+
         return new BFYResult.ShortestPathTree(distances, predecessors);
     }
 
     static private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors,
-                                        WeightedDigraph graph) {
+                                              WeightedDigraph graph) {
         int cycleWeight = 0;
 
-        // Get the last vertex of the Deque. It is guaranteed to be part of the negative cycle
+        // Get the last vertex of Deque. TODO: Is it guaranteed to be part of the negative cycle?
         int currentVertex = vertices.getLast();
         List<Integer> negativeCycle = new LinkedList<>(List.of(currentVertex));
 
