@@ -10,7 +10,7 @@ public final class Main {
     WeightedDigraph graph;
 
     for(String f : files) {
-      System.out.println("File: " + f);
+      System.out.println("\nProcessing file: " + f);
       // Read the graph from the file
       try {
         graph = WeightedDigraphReader.fromFile("data/" + f);

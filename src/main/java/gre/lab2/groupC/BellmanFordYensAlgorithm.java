@@ -10,6 +10,8 @@ import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
 
+    static final int VISITED = -2;
+
     @Override
     public BFYResult compute(WeightedDigraph graph, int source) {
         int numVertices = graph.getNVertices();
@@ -21,6 +23,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
         // Track whether a vertex is currently in the queue
         boolean[] isInQueue = new boolean[numVertices];
+        int[] ingoingVertexWeights = new int[numVertices];
 
         distances[source] = 0;
         int iterationCount = 0;
@@ -44,7 +47,6 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             if (currentVertex == UNREACHABLE) {
                 if (!vertices.isEmpty()) {
                     iterationCount++;
-                    if (iterationCount == numVertices - 1) break;
                     vertices.add(UNREACHABLE);
                 }
             } else {
@@ -55,8 +57,11 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
                     // If the new path is shorter, update the distance and predecessor
                     if (distances[successor] > newDistance) {
+
                         distances[successor] = newDistance;
                         predecessors[successor] = currentVertex;
+
+                        ingoingVertexWeights[successor] = edge.weight();
 
                         if (!isInQueue[successor]) {
                             // Add the successor to the queue
@@ -65,69 +70,39 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                         }
                     }
                 }
+
+                if(iterationCount == numVertices) {
+                    return getNegativeCycle(currentVertex, predecessors, ingoingVertexWeights);
+                }
             }
         }
-
-//        // Check for negative-weight cycles
-//        for (WeightedDigraph.Edge edge : graph.getOutgoingEdges()) {
-//            int u = edge.from();
-//            int v = edge.to();
-//            int weight = edge.weight();
-//            if (distances[u] + weight < distances[v]) {
-//                // Negative cycle detected, find cycle
-//                List<Integer> cycle = new ArrayList<>();
-//                boolean[] visited = new boolean[numVertices];
-//                do {
-//                    visited[u] = true;
-//                    u = predecessors[u];
-//                } while (!visited[u]);
-//
-//                // Backtrack to get the full cycle
-//                int start = u;
-//                do {
-//                    cycle.add(u);
-//                    u = predecessors[u];
-//                } while (u != start);
-//                cycle.add(u); // Add start vertex to complete the cycle
-//
-//                Collections.reverse(cycle); // Optional: To list the cycle in the correct order
-//                return new BFYResult.NegativeCycle(cycle, calculateCycleWeight(cycle, graph));
-//            }
-//        }
-
-
         return new BFYResult.ShortestPathTree(distances, predecessors);
     }
 
-    static private BFYResult getNegativeCycle(Deque<Integer> vertices, int[] predecessors,
-                                              WeightedDigraph graph) {
+    static private BFYResult getNegativeCycle(int from, int[] predecessors, int[]ingoingVertexWeights){
+        int currentCycleVertex = from;
+        List<Integer> negativeCycle = new LinkedList<>();
         int cycleWeight = 0;
+        while(true){
 
-        // Get the last vertex of Deque. TODO: Is it guaranteed to be part of the negative cycle?
-        int currentVertex = vertices.getLast();
-        List<Integer> negativeCycle = new LinkedList<>(List.of(currentVertex));
-
-        // Traverse the predecessors to construct the cycle and accumulate the weights
-        while (true) {
-            int predecessor = predecessors[currentVertex];
-
-            // Accumulate the weight of the edge between the predecessor and the current vertex
-            for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(predecessor)) {
-                if (edge.to() == currentVertex) {
-                    cycleWeight += edge.weight();
-                    break;
+            if (predecessors[currentCycleVertex] == VISITED) {
+                while (negativeCycle.getLast() != currentCycleVertex) {
+                    cycleWeight -= ingoingVertexWeights[negativeCycle.getLast()];
+                    negativeCycle.removeLast();
                 }
+                return new BFYResult.NegativeCycle(negativeCycle, cycleWeight);
             }
 
-            // Move to the predecessor and add it to the list
-            currentVertex = predecessor;
-            negativeCycle.add(currentVertex);
+            // Accumulate the weights
+            cycleWeight += ingoingVertexWeights[currentCycleVertex];
 
-            // Check if the cycle is complete
-            if (currentVertex == vertices.getLast()) {
-                break;
-            }
+            // Add the current vertex to the cycle
+            negativeCycle.addFirst(currentCycleVertex);
+            int temp = currentCycleVertex;
+            currentCycleVertex = predecessors[currentCycleVertex];
+
+            // Mark the vertex as visited
+            predecessors[temp] = VISITED;
         }
-        return new BFYResult.NegativeCycle(negativeCycle, cycleWeight);
     }
 }
