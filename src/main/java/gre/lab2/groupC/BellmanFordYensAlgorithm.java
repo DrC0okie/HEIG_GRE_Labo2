@@ -6,10 +6,25 @@ import gre.lab2.graph.WeightedDigraph;
 import static gre.lab2.graph.BFYResult.UNREACHABLE;
 import java.util.*;
 
+/**
+ * An implementation of the Bellman-Ford-Yens algorithm to find the shortest paths from a source
+ * vertex to all other vertices in a weighted digraph, or to detect a negative cycle in the graph.
+ */
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
 
+    /**
+     * A constant used to mark vertices that have been visited during cycle detection.
+     */
     static final int VISITED = -2;
 
+    /**
+     * Computes the shortest path tree from a source vertex or detects a negative cycle in the graph.
+     * If a negative cycle is detected during the computation, it returns the cycle instead of the shortest path tree.
+     *
+     * @param graph The weighted digraph to be processed.
+     * @param source The index of the source vertex from which paths are computed.
+     * @return BFYResult which can a shortest path tree or a negative cycle if one is found.
+     */
     @Override
     public BFYResult compute(WeightedDigraph graph, int source) {
         int numVertices = graph.getNVertices();
@@ -69,7 +84,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                     }
                 }
                 // At the nth iteration, we know there is a negative cycle
-                if(iterationCount == numVertices) {
+                if (iterationCount == numVertices) {
                     return getNegativeCycle(currentVertex, predecessors, ingoingVertexWeights);
                 }
             }
@@ -77,11 +92,18 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         return new BFYResult.ShortestPathTree(distances, predecessors);
     }
 
-    static private BFYResult getNegativeCycle(int from, int[] predecessors, int[]ingoingVertexWeights){
+    /**
+     * Detects and constructs a negative cycle starting from a given vertex.
+     * @param from The vertex from which cycle detection begins.
+     * @param predecessors Array holding the predecessor of each vertex in the path construction.
+     * @param ingoingVertexWeights Array holding weights of the incoming edges to each vertex.
+     * @return BFYResult representing the negative cycle found in the graph.
+     */
+    static private BFYResult getNegativeCycle(int from, int[] predecessors, int[] ingoingVertexWeights) {
         int currentCycleVertex = from, cycleWeight = 0;
         List<Integer> negativeCycle = new LinkedList<>();
 
-        while(true){
+        while (true) {
             // Visit the predecessors until we detect a cycle
             if (predecessors[currentCycleVertex] == VISITED) {
                 // Remove vertices and weights that are not part of the cycle
