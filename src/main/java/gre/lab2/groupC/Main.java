@@ -58,11 +58,11 @@ public final class Main {
     private static void displayResult(WeightedDigraph graph, BFYResult result) {
         if (result.isNegativeCycle()) {
             System.out.println("Negative cycle detected!");
-            System.out.println(replaceIntegerMaxValue(result.getNegativeCycle().toString()));
+            System.out.println(replaceIntMaxValue(result.getNegativeCycle().toString()));
         } else {
             System.out.print("No negative cycle detected. ");
             if (graph.getNVertices() < 25) {
-                System.out.println("\n" + replaceIntegerMaxValue(result.getShortestPathTree().toString()));
+                System.out.println("\n" + replaceIntMaxValue(result.getShortestPathTree().toString()));
             } else {
                 System.out.println("> 25 vertices, not displaying details");
             }
@@ -76,7 +76,7 @@ public final class Main {
      * @param s The string containing output data which may include Integer.MAX_VALUE.
      * @return The string with all instances of Integer.MAX_VALUE replaced by '∞'.
      */
-    private static String replaceIntegerMaxValue(String s) {
+    private static String replaceIntMaxValue(String s) {
         return s.replace(String.valueOf(Integer.MAX_VALUE), "∞");
     }
 }
