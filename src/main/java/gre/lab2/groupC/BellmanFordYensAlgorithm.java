@@ -21,14 +21,16 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
      * Computes the shortest path tree from a source vertex or detects a negative cycle in the graph.
      * If a negative cycle is detected during the computation, it returns the cycle instead of the shortest path tree.
      *
-     * @param graph The weighted digraph to be processed.
+     * @param graph  The weighted digraph to be processed.
      * @param source The index of the source vertex from which paths are computed.
-     * @return BFYResult which can a shortest path tree or a negative cycle if one is found.
+     * @return BFYResult which can be the shortest path tree or a negative cycle if one is found.
+     * @author Jarod Streckeisen, Timothée Van Hove
      */
     @Override
     public BFYResult compute(WeightedDigraph graph, int source) {
         int numVertices = graph.getNVertices();
-        int[] predecessors = new int[numVertices], distances = new int[numVertices];
+        int[] predecessors = new int[numVertices];
+        int[] distances = new int[numVertices];
 
         // Initialize distances to the Integer max value and predecessors to -1
         Arrays.fill(predecessors, UNREACHABLE);
@@ -65,19 +67,18 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             } else {
                 // Process every outgoing edge of the current vertex
                 for (WeightedDigraph.Edge edge : graph.getOutgoingEdges(currentVertex)) {
-                    int successor = edge.to();
-                    int newDistance = distances[currentVertex] + edge.weight();
+                    int successor = edge.to(), weight = edge.weight();
+                    int newDistance = distances[currentVertex] + weight;
 
-                    // If the new path is shorter, update the distance and predecessor
+                    // If the new path is shorter, update the distance and the predecessor
                     if (distances[successor] > newDistance) {
                         distances[successor] = newDistance;
                         predecessors[successor] = currentVertex;
 
                         // Add the edge weight in an array for quick access
-                        ingoingVertexWeights[successor] = edge.weight();
+                        ingoingVertexWeights[successor] = weight;
 
                         if (!isInQueue[successor]) {
-                            // Add the successor to the queue
                             vertices.add(successor);
                             isInQueue[successor] = true;
                         }
@@ -94,6 +95,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
     /**
      * Detects and constructs a negative cycle starting from a given vertex.
+     *
      * @param from The vertex from which cycle detection begins.
      * @param predecessors Array holding the predecessor of each vertex in the path construction.
      * @param ingoingVertexWeights Array holding weights of the incoming edges to each vertex.

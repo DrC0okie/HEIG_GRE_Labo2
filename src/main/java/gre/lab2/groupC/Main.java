@@ -1,7 +1,6 @@
 package gre.lab2.groupC;
 
 import gre.lab2.graph.*;
-
 import java.io.IOException;
 
 /**
