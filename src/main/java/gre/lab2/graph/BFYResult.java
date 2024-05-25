@@ -39,10 +39,9 @@ public sealed interface BFYResult {
 
     @Override
     public String toString() {
-      return "ShortestPathTree{" +
-            "distances=" + Arrays.toString(distances) +
-            ", predecessors=" + Arrays.toString(predecessors) +
-            '}';
+      return "ShortestPathTree:\n" +
+            "Distances: " + Arrays.toString(distances) +
+            "\nPredecessors: " + Arrays.toString(predecessors);
     }
   }
 
@@ -68,10 +67,9 @@ public sealed interface BFYResult {
 
     @Override
     public String toString() {
-      return "NegativeCycle{" +
-            "vertices=" + vertices +
-            ", length=" + length +
-            '}';
+      return "NegativeCycle: " +
+            "\nVertices: " + vertices +
+            "\nLength: " + length;
     }
   }
 

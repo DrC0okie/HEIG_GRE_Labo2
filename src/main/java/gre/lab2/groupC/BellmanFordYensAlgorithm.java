@@ -3,9 +3,7 @@ package gre.lab2.groupC;
 import gre.lab2.graph.BFYResult;
 import gre.lab2.graph.IBellmanFordYensAlgorithm;
 import gre.lab2.graph.WeightedDigraph;
-
 import static gre.lab2.graph.BFYResult.UNREACHABLE;
-
 import java.util.*;
 
 public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm {
@@ -17,7 +15,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
         int numVertices = graph.getNVertices();
         int[] predecessors = new int[numVertices], distances = new int[numVertices];
 
-        // Initialize distances to infinity and predecessors to -1
+        // Initialize distances to the Integer max value and predecessors to -1
         Arrays.fill(predecessors, UNREACHABLE);
         Arrays.fill(distances, Integer.MAX_VALUE);
 
@@ -57,10 +55,10 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
 
                     // If the new path is shorter, update the distance and predecessor
                     if (distances[successor] > newDistance) {
-
                         distances[successor] = newDistance;
                         predecessors[successor] = currentVertex;
 
+                        // Add the edge weight in an array for quick access
                         ingoingVertexWeights[successor] = edge.weight();
 
                         if (!isInQueue[successor]) {
@@ -70,7 +68,7 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
                         }
                     }
                 }
-
+                // At the nth iteration, we know there is a negative cycle
                 if(iterationCount == numVertices) {
                     return getNegativeCycle(currentVertex, predecessors, ingoingVertexWeights);
                 }
@@ -80,12 +78,13 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
     }
 
     static private BFYResult getNegativeCycle(int from, int[] predecessors, int[]ingoingVertexWeights){
-        int currentCycleVertex = from;
+        int currentCycleVertex = from, cycleWeight = 0;
         List<Integer> negativeCycle = new LinkedList<>();
-        int cycleWeight = 0;
-        while(true){
 
+        while(true){
+            // Visit the predecessors until we detect a cycle
             if (predecessors[currentCycleVertex] == VISITED) {
+                // Remove vertices and weights that are not part of the cycle
                 while (negativeCycle.getLast() != currentCycleVertex) {
                     cycleWeight -= ingoingVertexWeights[negativeCycle.getLast()];
                     negativeCycle.removeLast();
@@ -96,12 +95,12 @@ public final class BellmanFordYensAlgorithm implements IBellmanFordYensAlgorithm
             // Accumulate the weights
             cycleWeight += ingoingVertexWeights[currentCycleVertex];
 
-            // Add the current vertex to the cycle
+            // Add the current vertex to the cycle from the beginning to respect the cycle order
             negativeCycle.addFirst(currentCycleVertex);
             int temp = currentCycleVertex;
             currentCycleVertex = predecessors[currentCycleVertex];
 
-            // Mark the vertex as visited
+            // Re-use the predecessors array to mark the vertex as visited
             predecessors[temp] = VISITED;
         }
     }

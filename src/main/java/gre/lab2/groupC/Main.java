@@ -4,7 +4,17 @@ import gre.lab2.graph.*;
 import java.io.IOException;
 
 public final class Main {
-  static String[] files ={"reseau1.txt", "reseau2.txt", "reseau3.txt", "reseau4.txt"};
+  static String[] files ={
+          "reseau1.txt",
+          "reseau2.txt",
+          "reseau3.txt",
+          "reseau4.txt",
+          "reseau5.txt",
+          "reseau6.txt",
+          "reseau7.txt",
+          "reseau8.txt",
+          "reseau9.txt",
+          "reseau10.txt"};
 
   public static void main(String[] args) {
     WeightedDigraph graph;
@@ -24,17 +34,14 @@ public final class Main {
 
       // Print the result
       if (result.isNegativeCycle()) {
-        BFYResult.NegativeCycle negativeCycle = result.getNegativeCycle();
         System.out.println("Negative cycle detected!");
-        System.out.println("Cycle length (total weight): " + negativeCycle.length());
-        System.out.println("Cycle vertices: " + negativeCycle.vertices());
+        System.out.println(result.getNegativeCycle());
       } else {
-        BFYResult.ShortestPathTree spt = result.getShortestPathTree();
-        System.out.println("No negative cycle detected.");
+        System.out.print("No negative cycle detected. ");
         if (graph.getNVertices() < 25) {
-          System.out.println("Shortest path tree:");
-          System.out.println("Distances: " + arrayToString(spt.distances()));
-          System.out.println("Predecessors: " + arrayToString(spt.predecessors()));
+          System.out.println("\n" + result.getShortestPathTree());
+        } else {
+          System.out.println("> 25 vertices, not displaying details");
         }
       }
     }
